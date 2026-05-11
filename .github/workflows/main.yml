@@ -1,0 +1,54 @@
+name: "Job 1 – Build & Security Scan"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-scan:
+    name: "Build & Scan"
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      #
+      - name: Build FastAPI image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./api
+          file: ./api/Dockerfile
+          tags: my-api:latest
+          load: true
+
+   
+      - name: Docker Scout – Scan API image
+        uses: docker/scout-action@v1
+        with:
+          command: cves
+          image: my-api:latest
+          only-severities: critical
+          exit-code: true
+
+      
+      - name: Trivy – Scan MySQL image (report only)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: "mysql:8"
+          format: "table"
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
