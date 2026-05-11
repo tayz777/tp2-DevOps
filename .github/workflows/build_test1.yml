@@ -5,6 +5,7 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
+  workflow_dispatch: 
    
 jobs:
  build_test:
@@ -16,5 +17,7 @@ jobs:
      - name: Set up Docker Buildx
        uses: docker/setup-buildx-action@v3
      - name: Build image for scanning
-       run: docker build -t my-app:1.0.0 -f ./Dockerfile .
+       run: docker build -t my-app:1.0.0 -f api/Dockerfile .
+     - name: Build image Mongo
+       run: docker build -t my-app:1.0.0 -f mongo/Dockerfile .
        
